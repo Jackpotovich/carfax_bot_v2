@@ -29,7 +29,9 @@ async def check_vin(update: Update, context: CallbackContext) -> None:
     response = requests.get(url)
 
     if response.status_code == 200:
-        await update.message.reply_text(f"✅ VIN найден! 🚗\n\n💰 Стоимость отчёта: **$5.00**\n\nНажми /buy, чтобы купить.")
+        await update.message.reply_text(
+            f"✅ VIN найден! 🚗\n\n💰 Стоимость отчёта: **$5.00**\n\nНажми /buy, чтобы купить."
+        )
         context.user_data["vin"] = vin  # Сохраняем VIN для оплаты
     else:
         await update.message.reply_text("❌ VIN не найден. Проверь данные и попробуй снова.")
@@ -90,8 +92,10 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text("Привет! 🚗 Отправь мне VIN номер, и я проверю его. После этого ты сможешь купить Carfax-отчёт.")
 
 async def main():
+    # Создаем экземпляр Application
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Добавляем хэндлеры
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("buy", buy))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_vin))
@@ -99,27 +103,11 @@ async def main():
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
     print("🚀 Бот запущен!")
-    await application.run_polling()
-
-import asyncio
-
-async def main():
-    global application  # Добавляем глобальную переменную
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("buy", buy))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_vin))
-    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
-    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
-
-    print("🚀 Бот запущен!")
-    await application.run_polling()
+    # Запускаем polling с параметром close_loop=False, чтобы не пытаться закрыть event loop
+    await application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
+    import asyncio
     print("🚀 Запуск бота...")
-    
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    loop.run_until_complete(main())  # Теперь main() вызывается корректно
+    # Стандартный запуск через asyncio.run() должен работать в Render
+    asyncio.run(main())
