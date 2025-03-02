@@ -103,8 +103,10 @@ async def main():
 
 import asyncio
 
-import asyncio
-
 if __name__ == "__main__":
     print("🚀 Бот запущен!")
-    asyncio.run(main())  # Стандартный async-запуск без ошибок
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    application.run_polling()
