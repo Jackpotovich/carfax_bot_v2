@@ -9,62 +9,62 @@ from telegram import Update, LabeledPrice
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, PreCheckoutQueryHandler
 import requests
 
-# Загружаем токены из переменных окружения
+# Load tokens from environment variables
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CARFAX_API_KEY = os.getenv("CARFAX_API_KEY")
 PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
 CARFAX_PRICE = 299
 
-# ✅ Проверяем VIN
+# ✅ VIN Check
 async def check_vin(update: Update, context: CallbackContext) -> None:
     vin = update.message.text.strip().upper()
     if len(vin) != 17:
-        await update.message.reply_text("❌ Ошибка! VIN должен содержать **17 символов**.")
+        await update.message.reply_text("❌ Error! VIN must be **17 characters** long.")
         return
-    await update.message.reply_text("🔍 Проверяю VIN...")
+    await update.message.reply_text("🔍 Checking VIN...")
     url = f"https://carfax-report.online/api.php?vin={vin}"
     response = requests.get(url)
     if response.status_code == 200:
         await update.message.reply_text(
-            f"✅ VIN найден! 🚗\n\n💰 Стоимость отчёта: **$5.00**\n\nНажми /buy, чтобы купить."
+            f"✅ VIN found! 🚗\n\n💰 Report price: **$2.99**\n\nPress /buy to purchase."
         )
-        context.user_data["vin"] = vin  # Сохраняем VIN для оплаты
+        context.user_data["vin"] = vin  # Save VIN for payment
     else:
-        await update.message.reply_text("❌ VIN не найден. Проверь данные и попробуй снова.")
+        await update.message.reply_text("❌ VIN not found. Please check and try again.")
 
-# 💳 Покупка отчёта
+# 💳 Report Purchase
 async def buy(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     vin = context.user_data.get("vin")
     if not vin:
-        await update.message.reply_text("⚠️ Сначала отправь VIN для проверки!")
+        await update.message.reply_text("⚠️ Please send a VIN for verification first!")
         return
-    title = "Carfax Отчёт"
-    description = f"Отчёт по VIN {vin}"
+    title = "Carfax Report"
+    description = f"Report for VIN {vin}"
     payload = f"carfax_payment_{chat_id}_{vin}"
     currency = "USD"
-    prices = [LabeledPrice("Carfax Отчёт", CARFAX_PRICE)]
+    prices = [LabeledPrice("Carfax Report", CARFAX_PRICE)]
     await context.bot.send_invoice(
         chat_id, title, description, payload,
         PAYMENT_PROVIDER_TOKEN, currency, prices
     )
 
-# ✅ Финальная проверка перед оплатой
+# ✅ Pre-payment Verification
 async def precheckout_callback(update: Update, context: CallbackContext) -> None:
     query = update.pre_checkout_query
     if query.invoice_payload.startswith("carfax_payment"):
         await query.answer(ok=True)
     else:
-        await query.answer(ok=False, error_message="Ошибка платежа, попробуйте позже.")
+        await query.answer(ok=False, error_message="Payment error, please try again later.")
 
-# 🛠️ Получение отчёта после оплаты
+# 🛠️ Retrieve Report After Payment
 async def successful_payment(update: Update, context: CallbackContext) -> None:
     chat_id = update.message.chat_id
     vin = context.user_data.get("vin")
     if not vin:
-        await update.message.reply_text("⚠️ Ошибка: VIN не найден. Попробуйте снова.")
+        await update.message.reply_text("⚠️ Error: VIN not found. Please try again.")
         return
-    await update.message.reply_text("📑 Генерирую отчёт...")
+    await update.message.reply_text("📑 Generating report...")
     report_url = f"https://api.carfax.shop/report/getreport?key={CARFAX_API_KEY}&vin={vin}"
     response = requests.get(report_url)
     if response.status_code == 200:
@@ -72,12 +72,12 @@ async def successful_payment(update: Update, context: CallbackContext) -> None:
         with open(report_filename, "w", encoding="utf-8") as file:
             file.write(response.text)
         with open(report_filename, "rb") as file:
-            await context.bot.send_document(chat_id, file, caption=f"🚗 **Отчёт Carfax по VIN {vin}**")
+            await context.bot.send_document(chat_id, file, caption=f"🚗 **Carfax Report for VIN {vin}**")
     else:
-        await update.message.reply_text("❌ Ошибка получения отчёта. Свяжитесь с поддержкой.")
+        await update.message.reply_text("❌ Report retrieval error. Please contact support.")
 
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text("Привет! 🚗 Отправь мне VIN номер, и я проверю его. После этого ты сможешь купить Carfax-отчёт.")
+    await update.message.reply_text("Hello! 🚗 Send me a VIN number, and I will check it. After that, you can purchase a Carfax report.")
 
 async def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -88,14 +88,14 @@ async def main():
     application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
-    # Удаляем любой установленный вебхук, чтобы избежать конфликта
+    # Remove any set webhook to avoid conflicts
     await application.bot.delete_webhook()
 
-    print("🚀 Бот запущен!")
-    # Запускаем polling; close_loop=False, чтобы не закрывать event loop (мы будем использовать nest_asyncio)
+    print("🚀 Bot is running!")
+    # Start polling; close_loop=False to keep the event loop open (we are using nest_asyncio)
     await application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
     import asyncio
-    print("🚀 Запуск бота...")
+    print("🚀 Starting bot...")
     asyncio.run(main())
