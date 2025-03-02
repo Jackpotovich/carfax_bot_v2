@@ -1,3 +1,6 @@
+import nest_asyncio
+nest_asyncio.apply()
+
 import os
 import requests
 from telegram import Update, LabeledPrice
@@ -92,10 +95,8 @@ async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text("Привет! 🚗 Отправь мне VIN номер, и я проверю его. После этого ты сможешь купить Carfax-отчёт.")
 
 async def main():
-    # Создаем экземпляр Application
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Добавляем хэндлеры
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("buy", buy))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_vin))
@@ -103,11 +104,9 @@ async def main():
     application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
     print("🚀 Бот запущен!")
-    # Запускаем polling с параметром close_loop=False, чтобы не пытаться закрыть event loop
     await application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
     import asyncio
     print("🚀 Запуск бота...")
-    # Стандартный запуск через asyncio.run() должен работать в Render
     asyncio.run(main())
