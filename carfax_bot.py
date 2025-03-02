@@ -103,10 +103,23 @@ async def main():
 
 import asyncio
 
-if __name__ == "__main__":
+async def main():
+    global application  # Добавляем глобальную переменную
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("buy", buy))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_vin))
+    application.add_handler(PreCheckoutQueryHandler(precheckout_callback))
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
+
     print("🚀 Бот запущен!")
+    await application.run_polling()
+
+if __name__ == "__main__":
+    print("🚀 Запуск бота...")
     
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
-    application.run_polling()
+    loop.run_until_complete(main())  # Теперь main() вызывается корректно
