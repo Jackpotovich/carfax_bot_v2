@@ -13,7 +13,7 @@ import requests
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CARFAX_API_KEY = os.getenv("CARFAX_API_KEY")
 PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
-CARFAX_PRICE = 500
+CARFAX_PRICE = 299
 
 # ✅ Проверяем VIN
 async def check_vin(update: Update, context: CallbackContext) -> None:
