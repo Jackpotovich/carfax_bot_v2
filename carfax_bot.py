@@ -103,12 +103,8 @@ async def main():
 
 import asyncio
 
-if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+import asyncio
 
+if __name__ == "__main__":
     print("🚀 Бот запущен!")
-    loop.run_until_complete(main())
+    asyncio.run(main())  # Стандартный async-запуск без ошибок
