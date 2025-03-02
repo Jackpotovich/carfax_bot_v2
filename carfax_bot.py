@@ -106,8 +106,9 @@ import asyncio
 if __name__ == "__main__":
     try:
         loop = asyncio.get_running_loop()
-        print("⚠️ Event loop уже запущен, запускаем main() через ensure_future()")
-        asyncio.ensure_future(main())
     except RuntimeError:
-        print("🚀 Запускаем main() через run_until_complete()")
-        asyncio.run(main())  # Запускаем корректно
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    print("🚀 Бот запущен!")
+    loop.run_until_complete(main())
