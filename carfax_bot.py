@@ -1,3 +1,13 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv("secret.env")  # Загрузка переменных из файла secret.env
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+CARFAX_API_KEY = os.getenv("CARFAX_API_KEY")
+PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
+
+
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -6,14 +16,6 @@ import requests
 from telegram import Update, LabeledPrice
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, PreCheckoutQueryHandler
 
-# 🔑 Твой Telegram Bot API токен
-TELEGRAM_TOKEN = "ТВОЙ_ТЕЛЕГРАМ_ТОКЕН"
-
-# 🔑 API-ключ для Carfax
-CARFAX_API_KEY = "ТВОЙ_CARFAX_API_КЛЮЧ"
-
-# 🔑 Платёжный ключ Stripe (получить через @BotFather -> /setpayment)
-PAYMENT_PROVIDER_TOKEN = "ТВОЙ_STRIPE_PAYMENT_TOKEN"
 
 # 💲 Цена отчёта (в центах, например 500 = $5.00)
 CARFAX_PRICE = 500
